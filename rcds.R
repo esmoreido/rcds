@@ -5,17 +5,17 @@ library(lubridate)
 library(ncdf4)
 library(sf)
 setwd(paste0('C:', Sys.getenv("HOMEPATH"), '\\Rprojects\\rcds\\'))
-UID <- '' # âàø UID èç ëè÷íîãî êàáèíåòà íà https://cds.climate.copernicus.eu
-API_key <- '' # âàø API key èç ëè÷íîãî êàáèíåòà íà https://cds.climate.copernicus.eu
-wf_set_key(UID, API_key, 'cds') # óñòàíîâêà UID è API key
+UID <- '' # Ð²Ð°Ñˆ UID Ð¸Ð· Ð»Ð¸Ñ‡Ð½Ð¾Ð³Ð¾ ÐºÐ°Ð±Ð¸Ð½ÐµÑ‚Ð° Ð½Ð° https://cds.climate.copernicus.eu
+API_key <- '' # Ð²Ð°Ñˆ API key Ð¸Ð· Ð»Ð¸Ñ‡Ð½Ð¾Ð³Ð¾ ÐºÐ°Ð±Ð¸Ð½ÐµÑ‚Ð° Ð½Ð° https://cds.climate.copernicus.eu
+wf_set_key(UID, API_key, 'cds') # ÑƒÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ° UID Ð¸ API key
 rm(API_key)
 
-# ýêñòåíò
+# ÑÐºÑÑ‚ÐµÐ½Ñ‚
 shp_file <- st_read('shp/protva_basin.shp')
 coords <- st_bbox(shp_file)
-coords <- c(coords[4], coords[1], coords[2], coords[3]) # êîîðäèíàòû Ñåâåð/Çàïàä/Þã/Âîñòîê
+coords <- c(coords[4], coords[1], coords[2], coords[3]) # ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ Ð¡ÐµÐ²ÐµÑ€/Ð—Ð°Ð¿Ð°Ð´/Ð®Ð³/Ð’Ð¾ÑÑ‚Ð¾Ðº
 
-#âðåìÿ
+#Ð²Ñ€ÐµÐ¼Ñ
 f.years <- seq(2003, 2005, 1)
 f.months <- sprintf("%02d", seq(1, 12, 1))
 f.days <- sprintf("%02d", seq(1, 31, 1))
@@ -23,21 +23,21 @@ f.hours <- c("00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:
              "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
              "18:00", "19:00", "20:00", "21:00", "22:00", "23:00")
 
-r <- list() # ïóñòîé ñïèñîê äëÿ ïàðàìåòðîâ çàïðîñà ê CDS
+r <- list() # Ð¿ÑƒÑÑ‚Ð¾Ð¹ ÑÐ¿Ð¸ÑÐ¾Ðº Ð´Ð»Ñ Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð² Ð·Ð°Ð¿Ñ€Ð¾ÑÐ° Ðº CDS
 
 vars <- c('2m_temperature','total_precipitation','2m_dewpoint_temperature')
-# öèêë ïî îäàì
+# Ñ†Ð¸ÐºÐ» Ð¿Ð¾ Ð¾Ð´Ð°Ð¼
 for(y in f.years){
-    r[['product_type']] = "reanalysis" # òèï ïðîäóêòà
-    r[['format']] = "netcdf" # ôîðìàò GRIB èëè netCDF
-    r[['year']] = as.character(y) # ãîä èç öèêëà
-    # r[['variable']] = d # ïåðåìåííàÿ èç öèêëà
+    r[['product_type']] = "reanalysis" # Ñ‚Ð¸Ð¿ Ð¿Ñ€Ð¾Ð´ÑƒÐºÑ‚Ð°
+    r[['format']] = "netcdf" # Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚ GRIB Ð¸Ð»Ð¸ netCDF
+    r[['year']] = as.character(y) # Ð³Ð¾Ð´ Ð¸Ð· Ñ†Ð¸ÐºÐ»Ð°
+    # r[['variable']] = d # Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ð°Ñ Ð¸Ð· Ñ†Ð¸ÐºÐ»Ð°
     r[['variable']] = vars
-    r[['area']] = coords # êîîðäèíàòû Ñåâåð/Çàïàä/Þã/Âîñòîê
-    r[['month']] = f.months # çàïðàøèâàåìûå ìåñÿöû, ãåíåðèðóåòñÿ ïîñëåäîâàòåëüíîñòü ñòðîêîâûõ ÷èñåë ñ "0" ïåðåä åäèíèöàìè
-    r[['day']] = f.days # çàïðàøèâàåìûå äíè, ãåíåðèðóåòñÿ ïîñëåäîâàòåëüíîñòü ñòðîêîâûõ ÷èñåë ñ "0" ïåðåä åäèíèöàìè
-    r[['time']] = f.hours # ÷àñû
-    r[['dataset']] = "reanalysis-era5-single-levels" # íàáîð äàííûõ ñ ñàéòà ()
+    r[['area']] = coords # ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ Ð¡ÐµÐ²ÐµÑ€/Ð—Ð°Ð¿Ð°Ð´/Ð®Ð³/Ð’Ð¾ÑÑ‚Ð¾Ðº
+    r[['month']] = f.months # Ð·Ð°Ð¿Ñ€Ð°ÑˆÐ¸Ð²Ð°ÐµÐ¼Ñ‹Ðµ Ð¼ÐµÑÑÑ†Ñ‹, Ð³ÐµÐ½ÐµÑ€Ð¸Ñ€ÑƒÐµÑ‚ÑÑ Ð¿Ð¾ÑÐ»ÐµÐ´Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾ÑÑ‚ÑŒ ÑÑ‚Ñ€Ð¾ÐºÐ¾Ð²Ñ‹Ñ… Ñ‡Ð¸ÑÐµÐ» Ñ "0" Ð¿ÐµÑ€ÐµÐ´ ÐµÐ´Ð¸Ð½Ð¸Ñ†Ð°Ð¼Ð¸
+    r[['day']] = f.days # Ð·Ð°Ð¿Ñ€Ð°ÑˆÐ¸Ð²Ð°ÐµÐ¼Ñ‹Ðµ Ð´Ð½Ð¸, Ð³ÐµÐ½ÐµÑ€Ð¸Ñ€ÑƒÐµÑ‚ÑÑ Ð¿Ð¾ÑÐ»ÐµÐ´Ð¾Ð²Ð°Ñ‚ÐµÐ»ÑŒÐ½Ð¾ÑÑ‚ÑŒ ÑÑ‚Ñ€Ð¾ÐºÐ¾Ð²Ñ‹Ñ… Ñ‡Ð¸ÑÐµÐ» Ñ "0" Ð¿ÐµÑ€ÐµÐ´ ÐµÐ´Ð¸Ð½Ð¸Ñ†Ð°Ð¼Ð¸
+    r[['time']] = f.hours # Ñ‡Ð°ÑÑ‹
+    r[['dataset']] = "reanalysis-era5-single-levels" # Ð½Ð°Ð±Ð¾Ñ€ Ð´Ð°Ð½Ð½Ñ‹Ñ… Ñ ÑÐ°Ð¹Ñ‚Ð° ()
     r[['target']] = paste0("era5_", y, "_Jan-Dec", ".nc")
     print(r)
     ncfile <- wf_request(user = UID,
@@ -48,7 +48,7 @@ for(y in f.years){
   }
 # }
 
-# ïðèìåð çàïðîñà
+# Ð¿Ñ€Ð¸Ð¼ÐµÑ€ Ð·Ð°Ð¿Ñ€Ð¾ÑÐ°
 request <- list(
   product_type = "reanalysis",
   format = "netcdf",
